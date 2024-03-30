@@ -3,14 +3,14 @@ from tkinter import Tk, font, Frame, Button, Grid
 
 
 class App:
-    def __init__(self, root):
+    def __init__(self):
         # setting title
         root.title("Scanner utility")
         root.configure(background="white")
         # control-outline-color: #FFBF63
 
         # setting window size
-        width = 350
+        width = 340
         height = 180
 
         # Creating a Font object of "TkDefaultFont"
@@ -28,43 +28,35 @@ class App:
         root.geometry(alignstr)
         root.resizable(width=True, height=True)
 
-        # self.Grid.grid_rowconfigure(index=0, weight=1)
-        # Tk.grid_columnconfigure(self, index=0, weight=1)
-        # Tk.grid_columnconfigure(self, index=1, weight=1)
-        # Tk.grid_columnconfigure(self, index=2, weight=1)
-
         # buttonFrame = Frame(root, bg="gray")
-        root.grid(row=0, column=0, columnspan=3, pady=20)
-        # buttonFrame.pack(expand=1)
-        borderFrame = Frame(root, highlightbackground="#FFBF63", highlightcolor="#FFBF63",
-                            highlightthickness=4, relief="flat")
-        borderFrame.pack()
-        btn_scan = Button(borderFrame, relief="flat", bg="white")
+
+        # borderFrame = Frame(root, highlightbackground="#FFBF63", highlightcolor="#FFBF63",
+        #                     highlightthickness=4, relief="flat")
+        # borderFrame.pack()
+        btn_scan = Button(root, relief="groove", bg="white")
         btn_scan["justify"] = "center"
         btn_scan["text"] = "Scan"
-        # btn_scan.place(x=20, y=60, width=90, height=90)
-        btn_scan.grid(column=0, row=0)
-        btn_scan["command"] = self.GButton_893_command
+        btn_scan.place(x=20, y=60, width=90, height=90)
+        # btn_scan["command"] = self.GButton_893_command
 
-        borderFrame2 = Frame(buttonFrame, highlightbackground="#FFBF63", highlightcolor="#FFBF63",
-                             highlightthickness=4, relief="flat")
-        borderFrame2.pack()
-        btn_scan2pdf = Button(borderFrame2, borderwidth=2, relief="flat", bg="white")
+        # borderFrame2 = Frame(borderFrame, highlightbackground="#FFBF63", highlightcolor="#FFBF63",
+        #                      highlightthickness=4, relief="flat")
+        # borderFrame2.pack()
+        btn_scan2pdf = Button(root, borderwidth=2, relief="groove", bg="white")
         btn_scan2pdf["justify"] = "center"
-        btn_scan2pdf["text"] = "Scan to PDF"
-        # btn_scan2pdf.place(x=120, y=60, width=90, height=90)
-        btn_scan2pdf.grid(column=1, row=0)
+        btn_scan2pdf["text"] = "Scan to\nPDF"
+        btn_scan2pdf.place(x=120, y=60, width=90, height=90)
         btn_scan2pdf["command"] = self.GButton_899_command
 
-        borderFrame3 = Frame(buttonFrame, highlightbackground="#FFBF63", highlightcolor="#FFBF63",
-                             highlightthickness=4, relief="flat")
-        borderFrame3.pack()
-        btn_settings = Button(borderFrame3, borderwidth=2, relief="flat", bg="white")
+        # borderFrame3 = Frame(borderFrame, highlightbackground="#FFBF63", highlightcolor="#FFBF63",
+        #                      highlightthickness=4, relief="flat")
+        # borderFrame3.pack()
+        btn_settings = Button(root, borderwidth=2, relief="groove", bg="white")
         btn_settings["justify"] = "center"
         btn_settings["text"] = "Settings"
-        # btn_settings.place(x=220, y=60, width=90, height=90)
-        btn_settings.grid(column=2, row=0)
+        btn_settings.place(x=220, y=60, width=90, height=90)
         btn_settings["command"] = self.GButton_857_command
+        # btn_settings.pack()
 
     def GButton_893_command(self):
         print("command")
@@ -81,5 +73,5 @@ class App:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = App(root)
+    app = App()
     root.mainloop()
