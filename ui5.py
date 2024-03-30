@@ -17,7 +17,8 @@ class App(customtkinter.CTk):
         self.default_res = "600 dpi"
         self.scanner_model = tkinter.StringVar(value="None")
         self.src = None
-        self.scanned_image = Image
+        self.scanned_image = ImageTk
+        self.acquire_requested = False
 
         # Set font
         customtkinter.FontManager.load_font("Noto_Sans.ttf")
@@ -71,7 +72,7 @@ class App(customtkinter.CTk):
                                                         size=(60, 60))
         self.string_input_button = customtkinter.CTkButton(self.tabview.tab("Actions"),
                                                            text="",
-                                                           command=self.scan(),  # self.open_input_dialog_event,
+                                                           command=self.scan,  # self.open_input_dialog_event,
                                                            border_color="#FFBF63",
                                                            border_width=3,
                                                            fg_color="white",
@@ -140,6 +141,8 @@ class App(customtkinter.CTk):
         self.res_label = customtkinter.CTkLabel(self.tabview.tab("Settings"),
                                                 text="Resolution:")
         self.res_label.grid(row=1, column=0, padx=20, pady=(20, 10))
+
+        # TODO rename this properly
         self.optionmenu_1 = customtkinter.CTkOptionMenu(self.tabview.tab("Settings"),
                                                         dynamic_resizing=True,
                                                         values=["600 dpi", "300 dpi", "Value Long Long Long"])
@@ -177,19 +180,45 @@ class App(customtkinter.CTk):
         customtkinter.set_appearance_mode(new_appearance_mode)
 
     def scan(self):
+        logging.info("Scanning...")
         # this will show UI to allow user to select source
         if self.src:
-            self.src.request_acquire(show_ui=False, modal_ui=False)
+            logging.info("Test Acquire request param")
+            if not self.acquire_requested:
+                logging.info("Acquire request = False, requesting...")
+                # don't touch the visibility params, UI freezes and scanner becomes weird
+                self.src.request_acquire(show_ui=False, modal_ui=False)
+                self.acquire_requested = True
+                logging.info("Acquire request is now True, ready to go!")
+
+            logging.info("Acquire request = True")
             (handle, remaining_count) = self.src.xfer_image_natively()
+            logging.info(f"Remaining count = {remaining_count}")
+            logging.info("Acquire done")
             bmp_bytes = twain.dib_to_bm_file(handle)
             img = Image.open(BytesIO(bmp_bytes), formats=["bmp"])
             width, height = img.size
             factor = 600.0 / width
-            # Storing PhotoImage in global variable to prevent it from being deleted once this function exits
-            # since PhotoImage has a __del__ destructor
-            self.scanned_image = ImageTk.PhotoImage(img.resize(size=(int(width * factor), int(height * factor))))
-            self.frm.destroy()
-            customtkinter.CTkLabel(self, image=self.scanned_image).pack(side="left", fill="both", expand=1)
+            img.save("test.bmp")
+            logging.info("Image saved to disk")
+            # self.src.close()
+
+            secondary_window = (customtkinter.CTkToplevel(master=self))
+            secondary_window.title("Scan utility - scanned result")
+
+            # see https://github.com/TomSchimansky/CustomTkinter/issues/1486
+            secondary_window.attributes("-topmost", True)
+
+            # see https://github.com/TomSchimansky/CustomTkinter/issues/2302#issuecomment-1991632556
+            self.after(1000, lambda: secondary_window.iconbitmap("icons/scanner.ico"))
+
+            screen_width = self.winfo_screenwidth()
+            screen_height = self.winfo_screenheight()
+            secondary_window.config(width=screen_width / 2, height=screen_height / 2)
+
+            self.scanned_image = customtkinter.CTkImage(img, size=(int(width * factor), int(height * factor)))
+
+            customtkinter.CTkLabel(secondary_window, text="", image=self.scanned_image).pack(side="left", fill="both", expand=1)
         else:
             print("User clicked cancel")
 
