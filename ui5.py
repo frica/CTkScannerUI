@@ -1,7 +1,10 @@
 import logging
+import tkinter
+
 import customtkinter
 import twain
-from PIL import Image
+from io import BytesIO
+from PIL import Image, ImageTk
 
 customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
 customtkinter.set_default_color_theme("dark-blue")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -12,7 +15,9 @@ class App(customtkinter.CTk):
         super().__init__()
         self.sm = twain.SourceManager(self)
         self.default_res = "600 dpi"
-        self.scanner_model = "Canon LiDE 25"
+        self.scanner_model = tkinter.StringVar(value="None")
+        self.src = None
+        self.scanned_image = Image
 
         # Set font
         customtkinter.FontManager.load_font("Noto_Sans.ttf")
@@ -21,10 +26,13 @@ class App(customtkinter.CTk):
         self.title(" Scan utility")
         self.geometry(f"{360}x{250}")
         self.resizable(False, True)
+
+        # TODO can't find how to change the background to a darker one
         self.configure(highlightbackground="#122F7B")
         self.iconbitmap('icons/scanner.ico')
         # self.overrideredirect(True)
 
+        # TODO probably useless, I should check if I can remove
         # configure grid layout (1x1)
         # a non-zero weight causes a row or column to grow if there's extra space
         self.grid_columnconfigure(0, weight=0)
@@ -49,19 +57,21 @@ class App(customtkinter.CTk):
 
         self.scanner_model_saved_label = customtkinter.CTkLabel(self.tabview.tab("Actions"),
                                                                 justify="left",
-                                                                text=self.scanner_model,
+                                                                textvariable=self.scanner_model,
                                                                 )
         self.scanner_model_saved_label.grid(row=0, column=1,
                                             columnspan=2,
-                                            padx=20, pady=(20, 10),
+                                            padx=20,
+                                            pady=(20, 10),
                                             sticky="w")  # to justify left
 
+        # Scan
         self.scan_button_image = customtkinter.CTkImage(light_image=Image.open("icons/scanner.64x64.png"),
                                                         dark_image=Image.open("icons/scanner.64x64.png"),
                                                         size=(60, 60))
         self.string_input_button = customtkinter.CTkButton(self.tabview.tab("Actions"),
                                                            text="",
-                                                           command=self.open_input_dialog_event,
+                                                           command=self.scan(),  # self.open_input_dialog_event,
                                                            border_color="#FFBF63",
                                                            border_width=3,
                                                            fg_color="white",
@@ -75,6 +85,7 @@ class App(customtkinter.CTk):
                                                            )
         self.scanner_button_label.grid(row=3, column=0, padx=15)  # , pady=(10, 10))
 
+        # Scan to PDF
         self.scan_pdf_button_image = customtkinter.CTkImage(light_image=Image.open("icons/pdf.64x64.png"),
                                                             dark_image=Image.open("icons/scanner.64x64.png"),
                                                             size=(60, 60))
@@ -150,8 +161,13 @@ class App(customtkinter.CTk):
     def select_src(self):
         # this will show UI to allow user to select source
         self.src = self.sm.open_source()
+
         if not self.src:
             logging.error("No source selected")
+        else:
+            self.scanner_model.set(self.src.name)
+            logging.info(f"src = {self.src.name}")
+            logging.info(f"scanner_model = {self.scanner_model}")
 
     def open_input_dialog_event(self):
         dialog = customtkinter.CTkInputDialog(text="Type in a number:", title="CTkInputDialog")
@@ -160,15 +176,26 @@ class App(customtkinter.CTk):
     def change_appearance_mode_event(self, new_appearance_mode: str):
         customtkinter.set_appearance_mode(new_appearance_mode)
 
-    def change_scaling_event(self, new_scaling: str):
-        new_scaling_float = int(new_scaling.replace("%", "")) / 100
-        customtkinter.set_widget_scaling(new_scaling_float)
-
-    def sidebar_button_event(self):
-        print("sidebar_button click")
+    def scan(self):
+        # this will show UI to allow user to select source
+        if self.src:
+            self.src.request_acquire(show_ui=False, modal_ui=False)
+            (handle, remaining_count) = self.src.xfer_image_natively()
+            bmp_bytes = twain.dib_to_bm_file(handle)
+            img = Image.open(BytesIO(bmp_bytes), formats=["bmp"])
+            width, height = img.size
+            factor = 600.0 / width
+            # Storing PhotoImage in global variable to prevent it from being deleted once this function exits
+            # since PhotoImage has a __del__ destructor
+            self.scanned_image = ImageTk.PhotoImage(img.resize(size=(int(width * factor), int(height * factor))))
+            self.frm.destroy()
+            customtkinter.CTkLabel(self, image=self.scanned_image).pack(side="left", fill="both", expand=1)
+        else:
+            print("User clicked cancel")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     app = App()
     scanner_list = twain.SourceManager(app)
     app.mainloop()
