@@ -24,7 +24,7 @@ class App(customtkinter.CTk):
         customtkinter.FontManager.load_font("Noto_Sans.ttf")
 
         # configure window
-        self.title(" Scan utility")
+        self.title(" CTkScannerUI - Scan utility")
         self.geometry(f"{360}x{250}")
         self.resizable(False, True)
 
