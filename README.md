@@ -10,7 +10,9 @@ Currently only the Scan feature works but I plan to implement the other 2 option
 
 ## Screenshot
 
-![screenshot](mockups/mockup4.png)
+<p align="center">
+  <img src="mockups/mockup4.png" alt="main screen" width="300px"/>
+</p>
 
 ## Uses
 
